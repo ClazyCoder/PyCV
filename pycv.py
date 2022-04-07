@@ -9,3 +9,6 @@ def rotate(img, angle):
 
 def canny(img, t1, t2):
     pass
+
+def draw_line(img, x1, y1, x2, y2):
+    pass
