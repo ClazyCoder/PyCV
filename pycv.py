@@ -15,6 +15,7 @@ def draw_line(img, x1, y1, x2, y2):
     pass
 
 def calc_homography(points1, points2):
+    assert points1.shape == points2.shape, 'Wrong points size!'
     pass
 
 def calibrate_camera(img_points, obj_points):
