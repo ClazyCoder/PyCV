@@ -6,9 +6,22 @@ def null_space(a, rtol=1e-5):
     return rank, v[rank:].T.copy()
 
 def convolution(img, kernel):
-    res = img.copy()
+    assert len(img.shape) == 2, 'Input 1-Channel image only!'
     assert kernel.shape[0] == kernel.shape[1] and kernel.shape[0] % 2 == 1, 'Wrong Kernel Size!'
-    pass
+    kernel = np.flipud(np.fliplr(kernel))
+    pad = kernel.shape[0] // 2
+    value = np.sum(kernel)
+    new_image = np.pad(img,((pad,pad),(pad,pad)),'constant',constant_values=0)
+    new_image = new_image.astype(np.float64)
+    new_image = np.abs(new_image)
+    new_image /= np.max(new_image)
+    sub_matrices = np.lib.stride_tricks.as_strided(new_image,
+                                                   shape = tuple(np.subtract(new_image.shape, kernel.shape)+1)+kernel.shape, 
+                                                   strides = new_image.strides * 2)
+    if value > 0:
+        return np.einsum('ij,klij->kl', kernel, sub_matrices) / value
+    else:
+        return np.einsum('ij,klij->kl', kernel, sub_matrices)
 
 def rotate(img, angle):
     pass
