@@ -1,9 +1,5 @@
 import numpy as np
-
-def null_space(a, rtol=1e-5):
-    _, s, v = np.linalg.svd(a)
-    rank = (s > rtol*s[0]).sum()
-    return rank, v[rank:].T.copy()
+import utils.utils as utils
 
 def convolution(img, kernel):
     assert len(img.shape) == 2, 'Input 1-Channel image only!'
@@ -42,7 +38,7 @@ def calibrate_camera(img_points, obj_points):
             p_Set.append(px)
             p_Set.append(py)
         p_Set = np.array(p_Set)
-        H = null_space(p_Set)[1]
+        H = utils.null_space(p_Set)[1]
         H_Set.append(H)
     V_Set = []
     for H in H_Set:
@@ -56,7 +52,7 @@ def calibrate_camera(img_points, obj_points):
         V_Set.append(v1)
         V_Set.append(v2-v3)
     V_Set = np.array(V_Set)
-    b_vec = null_space(V_Set)[1]
+    b_vec = utils.null_space(V_Set)[1]
     B = [b_vec[0],b_vec[1],b_vec[2],b_vec[1],b_vec[3],b_vec[4],b_vec[2],b_vec[4],b_vec[5]]
     B = np.array(B)
     B = B.reshape(3,3)
