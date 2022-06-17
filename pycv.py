@@ -1,4 +1,5 @@
 import numpy as np
+import math
 import utils.utils as utils
 
 def convolution(img, kernel):
@@ -20,7 +21,47 @@ def convolution(img, kernel):
         return np.einsum('ij,klij->kl', kernel, sub_matrices)
 
 def rotate(img, angle):
-    pass
+    rad = -angle * math.pi / 180.0
+    if len(img.shape) == 3:
+        new_img = np.zeros((img.shape[0],img.shape[1],3),dtype=np.uint8)
+        for i in range(img.shape[0]):
+            for j in range(img.shape[1]):
+                for k in range(3):
+                    cy = img.shape[0] // 2
+                    cx = img.shape[1] // 2
+                    y = i - cy
+                    x = j - cx
+                    newY = y * math.cos(rad) + x * math.sin(rad) + cy
+                    newX = y * -math.sin(rad) + x * math.cos(rad) + cx
+                    alpha = 1 - (newX-math.floor(newX))
+                    beta = 1 - (newY-math.floor(newY))
+                    newX = round(newX)
+                    newY = round(newY)
+                    if newX >=0 and newX < img.shape[1]-1 and newY >=0 and newY < img.shape[0]-1:
+                        f1 = (1-alpha)*img.item(newY,newX,k)+alpha*img.item(newY,newX+1,k)
+                        f2 = (1-alpha)*img.item(newY+1,newX,k)+alpha*img.item(newY+1,newX+1,k)
+                        f3 = (1-beta)*f1+beta*f2
+                        new_img.itemset(i,j,k,int(f3))
+    elif len(img.shape) == 1:
+        new_img = np.zeros((img.shape[0],img.shape[1]),dtype=np.uint8)
+        for i in range(img.shape[0]):
+            for j in range(img.shape[1]):
+                cy = img.shape[0] // 2
+                cx = img.shape[1] // 2
+                y = i - cy
+                x = j - cx
+                newY = y * math.cos(rad) + x * math.sin(rad) + cy
+                newX = y * -math.sin(rad) + x * math.cos(rad) + cx
+                alpha = 1 - (newX-math.floor(newX))
+                beta = 1 - (newY-math.floor(newY))
+                newX = round(newX)
+                newY = round(newY)
+                if newX >=0 and newX < img.shape[1]-1 and newY >=0 and newY < img.shape[0]-1:
+                    f1 = (1-alpha)*img.item(newY,newX)+alpha*img.item(newY,newX+1)
+                    f2 = (1-alpha)*img.item(newY+1,newX)+alpha*img.item(newY+1,newX+1)
+                    f3 = (1-beta)*f1+beta*f2
+                    new_img.itemset(i,j,int(f3))
+    return new_img
 
 def canny(img, t1, t2):
     pass
