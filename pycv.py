@@ -69,6 +69,12 @@ def canny(img, t1, t2):
 def draw_line(img, x1, y1, x2, y2):
     pass
 
+def threshold(img,thresh):
+    pass
+
+def otsu(img):
+    pass
+
 def calibrate_camera(img_points, obj_points):
     H_Set = []
     for img_ps, obj_ps in zip(img_points, obj_points):
