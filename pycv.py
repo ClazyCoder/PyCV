@@ -42,7 +42,7 @@ def rotate(img, angle):
                         f2 = (1-alpha)*img.item(newY+1,newX,k)+alpha*img.item(newY+1,newX+1,k)
                         f3 = (1-beta)*f1+beta*f2
                         new_img.itemset(i,j,k,int(f3))
-    elif len(img.shape) == 1:
+    elif len(img.shape) == 2:
         new_img = np.zeros((img.shape[0],img.shape[1]),dtype=np.uint8)
         for i in range(img.shape[0]):
             for j in range(img.shape[1]):
@@ -69,11 +69,43 @@ def canny(img, t1, t2):
 def draw_line(img, x1, y1, x2, y2):
     pass
 
-def threshold(img,thresh):
-    pass
+def threshold(img, T, max=255, min=0):
+    assert len(img.shape) == 2, 'Input 1-Channel image only!'
+    new_img = np.zeros(img.shape)
+    new_img[img >= T] = max
+    new_img[img < T] = min
+    return new_img
 
-def otsu(img):
-    pass
+def otsu(img, max=255, min=0):
+    assert len(img.shape) == 2, 'Input 1-Channel image only!'
+    img_hist = np.zeros(256)
+    for i in range(img.shape[1]):
+        for j in range(img.shape[0]):
+            img_hist[img.item(j,i)] += 1
+    img_hist /= img.shape[0] * img.shape[1]
+    ave = 0
+    for i in range(256):
+        ave += i * img_hist[i]
+    T = 0
+    pw = img_hist[0]
+    pu = 0
+    best = 0
+    for i in range(1,256):
+        w = pw + img_hist[i]
+        if w == 0 or w == 1:
+            continue
+        u1 = (pw * pu + i * img_hist[i] ) / w
+        u2 = (ave - w * u1) / (1-w)
+        t = (w*(1-w))*((u1 - u2)**2)
+        if t >= best:
+            best = t
+            T = i
+        pw = w
+        pu = u1
+    new_img = np.zeros(img.shape)
+    new_img[img >= T] = max
+    new_img[img < T] = min
+    return new_img
 
 def calibrate_camera(img_points, obj_points):
     H_Set = []
