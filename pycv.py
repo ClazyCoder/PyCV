@@ -20,6 +20,22 @@ def convolution(img, kernel):
     else:
         return np.einsum('ij,klij->kl', kernel, sub_matrices)
 
+def convolution_raw(img, kernel):
+    assert len(img.shape) == 2, 'Input 1-Channel image only!'
+    assert kernel.shape[0] == kernel.shape[1] and kernel.shape[0] % 2 == 1, 'Wrong Kernel Size!'
+    kernel = np.flipud(np.fliplr(kernel))
+    pad = kernel.shape[0] // 2
+    value = np.sum(kernel)
+    new_image = np.pad(img,((pad,pad),(pad,pad)),'constant',constant_values=0)
+    new_image = new_image.astype(np.float64)
+    sub_matrices = np.lib.stride_tricks.as_strided(new_image,
+                                                   shape = tuple(np.subtract(new_image.shape, kernel.shape)+1)+kernel.shape, 
+                                                   strides = new_image.strides * 2)
+    if value > 0:
+        return np.einsum('ij,klij->kl', kernel, sub_matrices) / value
+    else:
+        return np.einsum('ij,klij->kl', kernel, sub_matrices)
+
 def rotate(img, angle):
     rad = -angle * math.pi / 180.0
     if len(img.shape) == 3:
@@ -63,6 +79,35 @@ def rotate(img, angle):
                     new_img.itemset(i,j,int(f3))
     return new_img
 
+def sobel(img, x, y):
+    assert x > 0 or y > 0, 'At least one parameter must bigger than 0!'
+    SOBEL_Y = np.array([
+    [-1,-2,-1],
+    [0,0,0],
+    [1,2,1]
+    ])
+    SOBEL_X = np.array([
+        [-1,0,1],
+        [-2,0,2],
+        [-1,0,1]
+    ])
+    new_img = img.copy()
+    for i in range(x):
+        new_img = convolution_raw(new_img,SOBEL_X)
+    for i in range(y):
+        new_img = convolution_raw(new_img,SOBEL_Y)
+    return new_img
+
+def get_gaussian_kernel(filter_size, sigma = 1.0):
+    size = int(filter_size//2)
+    assert filter_size % 2 == 1, 'Filter\'s size must be odd number!'
+    gauss_filter = np.zeros((filter_size, filter_size))
+    for x in range(filter_size):
+        for y in range(filter_size):
+            gauss_value = utils.gauss(x-size,y-size,sigma)
+            gauss_filter.itemset(x,y,gauss_value)
+    return gauss_filter
+    
 def canny(img, t1, t2):
     pass
 
