@@ -3,6 +3,12 @@ import math
 import utils.utils as utils
 import queue
 
+def to_grayscale(img):
+    assert len(img.shape) == 3 and img.shape[2] == 3, 'Input 3-Channel image only!'
+    gray_img = np.sum(img, axis=2)
+    gray_img = gray_img / 3
+    return gray_img.astype(np.uint8)
+
 def convolution(img, kernel):
     assert len(img.shape) == 2, 'Input 1-Channel image only!'
     assert kernel.shape[0] == kernel.shape[1] and kernel.shape[0] % 2 == 1, 'Wrong Kernel Size!'
