@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import utils.utils as utils
+import queue
 
 def convolution(img, kernel):
     assert len(img.shape) == 2, 'Input 1-Channel image only!'
@@ -92,24 +93,69 @@ def sobel(img, x, y):
         [-1,0,1]
     ])
     new_img = img.copy()
-    for i in range(x):
+    for _ in range(x):
         new_img = convolution_raw(new_img,SOBEL_X)
-    for i in range(y):
+    for _ in range(y):
         new_img = convolution_raw(new_img,SOBEL_Y)
     return new_img
 
 def get_gaussian_kernel(filter_size, sigma = 1.0):
-    size = int(filter_size//2)
-    assert filter_size % 2 == 1, 'Filter\'s size must be odd number!'
-    gauss_filter = np.zeros((filter_size, filter_size))
-    for x in range(filter_size):
-        for y in range(filter_size):
+    if filter_size == 0:
+        FILTER_SIZE = int(sigma*6)
+        if FILTER_SIZE % 2 == 0:
+            FILTER_SIZE += 1
+    else:
+        FILTER_SIZE = filter_size
+    size = int(FILTER_SIZE//2)
+    assert FILTER_SIZE % 2 == 1, 'Filter\'s size must be odd number!'
+    gauss_filter = np.zeros((FILTER_SIZE, FILTER_SIZE))
+    for x in range(FILTER_SIZE):
+        for y in range(FILTER_SIZE):
             gauss_value = utils.gauss(x-size,y-size,sigma)
             gauss_filter.itemset(x,y,gauss_value)
     return gauss_filter
     
-def canny(img, t1, t2):
-    pass
+def canny(img, t_low, t_high, sigma=1.0):
+    DIRECTION_LIST = [(-1,0,1,0),(-1,1,1,-1),(0,1,0,-1),(-1,-1,1,1)]
+    YX_LIST = [(-1,-1),(-1,0),(-1,1),(0,-1),(0,1),(1,-1),(1,0),(1,1)]
+    assert len(img.shape) == 2, 'Input 1-Channel image only!'
+    gauss_kernel = get_gaussian_kernel(0, sigma)
+    mag_map = np.zeros(img.shape)
+    dir_map = np.zeros(img.shape)
+    edge_map = np.zeros(img.shape, dtype=np.uint8)
+    visited = np.zeros(img.shape)
+    filtered_img = convolution_raw(img, gauss_kernel)
+    dx_img = sobel(filtered_img, 1, 0)
+    dy_img = sobel(filtered_img, 0, 1)
+    mag_map = np.sqrt(dx_img**2 + dy_img**2)
+    dir_map = np.arctan2(dy_img, dx_img) + 90
+    dir_map = ((dir_map / 360) * 8).astype(np.uint8)
+    for i in range(1,filtered_img.shape[0]-1):
+        for j in range(1,filtered_img.shape[1]-1):
+            y1,x1,y2,x2 = DIRECTION_LIST[int(dir_map.item(i,j))%4]
+            y1 += i
+            x1 += j
+            y2 += i
+            x2 += j
+            if mag_map.item(i,j) <= mag_map.item(y1,x1) or mag_map.item(i,j) <= mag_map.item(y2,x2):
+                mag_map.itemset(i,j,0)
+    Q = queue.Queue()
+    for i in range(1,edge_map.shape[0]-1):
+        for j in range(1,edge_map.shape[1]-1):
+            if mag_map.item(i,j) > t_high and visited.item(i,j) == 0:
+                Q.put((i,j))
+                while not Q.empty():
+                    y, x = Q.get()
+                    visited.itemset(y,x,1)
+                    edge_map.itemset(y,x,255)
+                    for y1,x1 in YX_LIST:
+                        if y1+y > 255 or y1+y < 0 or x1+x > 255 or x1+x < 0:
+                            continue
+                        if mag_map.item(y1+y,x1+x)>t_low and visited.item(y1+y,x1+x) == 0:
+                            visited.itemset(y1+y,x1+x,1)
+                            edge_map.itemset(y1+y,x1+x,255)
+                            Q.put((y+y1,x+x1))
+    return edge_map
 
 def draw_line(img, x1, y1, x2, y2):
     pass
