@@ -4,13 +4,13 @@ import utils.utils as utils
 import queue
 
 def to_grayscale(img):
-    assert len(img.shape) == 3 and img.shape[2] == 3, 'Input 3-Channel image only!'
+    assert img.ndim == 3 and img.shape[2] == 3, 'Input 3-Channel image only!'
     gray_img = np.sum(img, axis=2)
     gray_img = gray_img / 3
     return gray_img.astype(np.uint8)
 
 def convolution(img, kernel):
-    assert len(img.shape) == 2, 'Input 1-Channel image only!'
+    assert img.ndim == 2, 'Input 1-Channel image only!'
     assert kernel.shape[0] == kernel.shape[1] and kernel.shape[0] % 2 == 1, 'Wrong Kernel Size!'
     kernel = np.flipud(np.fliplr(kernel))
     pad = kernel.shape[0] // 2
@@ -28,7 +28,7 @@ def convolution(img, kernel):
         return np.einsum('ij,klij->kl', kernel, sub_matrices)
 
 def convolution_raw(img, kernel):
-    assert len(img.shape) == 2, 'Input 1-Channel image only!'
+    assert img.ndim == 2, 'Input 1-Channel image only!'
     assert kernel.shape[0] == kernel.shape[1] and kernel.shape[0] % 2 == 1, 'Wrong Kernel Size!'
     kernel = np.flipud(np.fliplr(kernel))
     pad = kernel.shape[0] // 2
@@ -45,7 +45,7 @@ def convolution_raw(img, kernel):
 
 def rotate(img, angle):
     rad = -angle * math.pi / 180.0
-    if len(img.shape) == 3:
+    if img.ndim == 3:
         new_img = np.zeros((img.shape[0],img.shape[1],3),dtype=np.uint8)
         for i in range(img.shape[0]):
             for j in range(img.shape[1]):
@@ -65,7 +65,7 @@ def rotate(img, angle):
                         f2 = (1-alpha)*img.item(newY+1,newX,k)+alpha*img.item(newY+1,newX+1,k)
                         f3 = (1-beta)*f1+beta*f2
                         new_img.itemset(i,j,k,int(f3))
-    elif len(img.shape) == 2:
+    elif img.ndim == 2:
         new_img = np.zeros((img.shape[0],img.shape[1]),dtype=np.uint8)
         for i in range(img.shape[0]):
             for j in range(img.shape[1]):
@@ -87,6 +87,7 @@ def rotate(img, angle):
     return new_img
 
 def sobel(img, x, y):
+    assert img.ndim == 2, 'Input 1-Channel image only!'
     assert x > 0 or y > 0, 'At least one parameter must bigger than 0!'
     SOBEL_Y = np.array([
     [-1,-2,-1],
@@ -124,7 +125,7 @@ def get_gaussian_kernel(filter_size, sigma = 1.0):
 def canny(img, t_low, t_high, sigma=1.0):
     DIRECTION_LIST = [(-1,0,1,0),(-1,1,1,-1),(0,1,0,-1),(-1,-1,1,1)]
     YX_LIST = [(-1,-1),(-1,0),(-1,1),(0,-1),(0,1),(1,-1),(1,0),(1,1)]
-    assert len(img.shape) == 2, 'Input 1-Channel image only!'
+    assert img.ndim == 2, 'Input 1-Channel image only!'
     gauss_kernel = get_gaussian_kernel(0, sigma)
     mag_map = np.zeros(img.shape)
     dir_map = np.zeros(img.shape)
@@ -167,14 +168,14 @@ def draw_line(img, x1, y1, x2, y2):
     pass
 
 def threshold(img, T, max=255, min=0):
-    assert len(img.shape) == 2, 'Input 1-Channel image only!'
+    assert img.ndim == 2, 'Input 1-Channel image only!'
     new_img = np.zeros(img.shape)
     new_img[img >= T] = max
     new_img[img < T] = min
     return new_img
 
 def otsu(img, max=255, min=0):
-    assert len(img.shape) == 2, 'Input 1-Channel image only!'
+    assert img.ndim == 2, 'Input 1-Channel image only!'
     img_hist = np.zeros(256)
     for i in range(img.shape[1]):
         for j in range(img.shape[0]):
