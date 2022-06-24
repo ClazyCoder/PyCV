@@ -164,9 +164,6 @@ def canny(img, t_low, t_high, sigma=1.0):
                             Q.put((y+y1,x+x1))
     return edge_map
 
-def draw_line(img, x1, y1, x2, y2):
-    pass
-
 def threshold(img, T, max=255, min=0):
     assert img.ndim == 2, 'Input 1-Channel image only!'
     new_img = np.zeros(img.shape)
