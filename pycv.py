@@ -121,6 +121,18 @@ def get_gaussian_kernel(filter_size, sigma = 1.0):
             gauss_value = utils.gauss(x-size,y-size,sigma)
             gauss_filter.itemset(x,y,gauss_value)
     return gauss_filter
+
+def median(img, filter_size):
+    assert img.ndim == 2, 'Input 1-Channel image only!'
+    assert filter_size % 2 == 1, 'Filter\'s size must be odd number!'
+    pad = filter_size // 2
+    new_image = np.pad(img,((pad,pad),(pad,pad)),'constant',constant_values=0)
+    sub_matrices = np.lib.stride_tricks.as_strided(new_image,
+                                                   shape = tuple(np.subtract(new_image.shape, (filter_size,filter_size))+1)+(filter_size,filter_size), 
+                                                   strides = new_image.strides * 2)
+    sub_matrices = np.reshape(sub_matrices,(img.shape[0],img.shape[1],-1))
+    med = np.median(sub_matrices, axis=2)
+    return med.astype(np.uint8)
     
 def canny(img, t_low, t_high, sigma=1.0):
     DIRECTION_LIST = [(-1,0,1,0),(-1,1,1,-1),(0,1,0,-1),(-1,-1,1,1)]
