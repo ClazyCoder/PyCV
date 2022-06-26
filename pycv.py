@@ -17,7 +17,6 @@ def convolution(img, kernel):
     value = np.sum(kernel)
     new_image = np.pad(img,((pad,pad),(pad,pad)),'constant',constant_values=0)
     new_image = new_image.astype(np.float64)
-    new_image = np.abs(new_image)
     new_image /= np.max(new_image)
     sub_matrices = np.lib.stride_tricks.as_strided(new_image,
                                                    shape = tuple(np.subtract(new_image.shape, kernel.shape)+1)+kernel.shape, 
